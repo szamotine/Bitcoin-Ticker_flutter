@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:http/http.dart';
 
 import '../utilities/coin_data.dart';
@@ -12,17 +14,28 @@ class NetworkHelper {
       path: '/v1/exchangerate/$coin/$currency',
       queryParameters: <String, String>{'apikey': kAPIKey},
     );
-
+    print(httpsUri.toString());
     return await get(httpsUri);
   }
 
   static CoinData responseToCoinData(Response response) {
-    print(response.statusCode);
+    print('Status code is ${response.statusCode}');
     if (response.statusCode == 200) {
       return CoinData.response(response);
     } else {
+      print('Error: ${jsonDecode(response.body)["error"]}');
+      print('Header: ${response.headers.keys}');
+      print('Remaining: ${response.headers["x-concurrencylimit-remaining"]}');
+      print('Reset: ${response.headers["x-ratelimit-reset"]}');
+      print('Used: ${response.headers["x-ratelimit-used"]}');
       return CoinData();
     }
+  }
+
+  static Future<CoinData> getCoinData(String coin, String currency) async {
+    Response response = await getCurrencyData(coin, currency);
+
+    return responseToCoinData(response);
   }
 
   static void buildHTTPSRequest(String coin, String currency) {

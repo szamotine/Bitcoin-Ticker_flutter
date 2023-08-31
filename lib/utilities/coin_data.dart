@@ -1,46 +1,22 @@
 import 'dart:convert';
 
+import 'package:bitcoin_ticker/services/network_helper.dart';
 import 'package:http/http.dart';
-
-const List<String> currenciesList = [
-  'AUD',
-  'BRL',
-  'CAD',
-  'CNY',
-  'EUR',
-  'GBP',
-  'HKD',
-  'IDR',
-  'ILS',
-  'INR',
-  'JPY',
-  'MXN',
-  'NOK',
-  'NZD',
-  'PLN',
-  'RON',
-  'RUB',
-  'SEK',
-  'SGD',
-  'USD',
-  'ZAR'
-];
-
-const List<String> cryptoList = [
-  'BTC',
-  'ETH',
-  'LTC',
-];
 
 class CoinData {
   late Response response;
 
   CoinData() {
     response = Response('', 500);
+    timeStamp = DateTime.timestamp().toString();
+    coin = 'BTC';
+    currency = 'USD';
+    price = 999;
+  }
+
+  CoinData.manualInput({required this.coin, required this.currency, required this.price}) {
+    data = '';
     timeStamp = '';
-    coin = '';
-    currency = '';
-    price = 0;
   }
 
   CoinData.response(this.response) {
@@ -55,11 +31,25 @@ class CoinData {
   late final String? data;
   late final String timeStamp;
   late final String coin;
-  late final String currency;
-  late final double price;
+  late String currency;
+  late double price;
 
   @override
   String toString() {
     return 'CoinData{timeStamp: $timeStamp, coin: $coin, currency: $currency, price: $price}';
+  }
+
+  static Future<CoinData> getCoinData(String coin, String currency) async {
+    Response response = await NetworkHelper.getCurrencyData(coin, currency);
+
+    return NetworkHelper.responseToCoinData(response);
+  }
+
+  void coinDataRefresh() async {
+    Response response = await NetworkHelper.getCurrencyData(coin, currency);
+    CoinData newData = NetworkHelper.responseToCoinData(response);
+    print('Old price: $price \nNewPrice: ${newData.price}');
+    price = newData.price;
+    //timeStamp = newData.timeStamp;
   }
 }
